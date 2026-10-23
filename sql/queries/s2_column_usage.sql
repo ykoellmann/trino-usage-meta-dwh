@@ -4,7 +4,7 @@
 -- test setup are synthetic and have no columns in Trino.
 -- Columns read through a view count for the table behind it.
 WITH p AS (
-    SELECT DATE '2026-10-19' AS from_day, DATE '2026-10-22' AS to_day
+    SELECT DATE '2026-10-12' AS from_day, DATE '2026-10-22' AS to_day
 )
 SELECT
     o.table_schema,

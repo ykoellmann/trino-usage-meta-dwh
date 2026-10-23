@@ -1,6 +1,6 @@
 -- Tables that are written to but never read in a period. They cost storage and compute and benefit nobody.
 WITH p AS (
-    SELECT DATE '2026-10-19' AS from_day, DATE '2026-10-22' AS to_day
+    SELECT DATE '2026-10-12' AS from_day, DATE '2026-10-22' AS to_day
 )
 SELECT
     o.table_schema,

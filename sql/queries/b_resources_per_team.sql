@@ -4,7 +4,7 @@
 -- Failed queries count, they used resources. Service accounts count with the team that runs them.
 -- Units: cpu in hours, memory in GB-hours (cumulative_memory is byte-seconds), data in GB (10^9 bytes).
 WITH p AS (
-    SELECT DATE '2026-10-19' AS from_day, DATE '2026-10-22' AS to_day
+    SELECT DATE '2026-10-12' AS from_day, DATE '2026-10-22' AS to_day
 )
 SELECT
     u.team_id,

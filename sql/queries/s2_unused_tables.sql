@@ -2,7 +2,7 @@
 -- Tables first seen after the start of the period are skipped, they had less than the full period to be used.
 -- Deleted tables are skipped as well.
 WITH p AS (
-    SELECT DATE '2026-10-19' AS from_day, DATE '2026-10-22' AS to_day
+    SELECT DATE '2026-10-12' AS from_day, DATE '2026-10-22' AS to_day
 )
 SELECT o.table_schema, o.table_name, o.table_type, o.first_seen
 FROM iceberg.core.dim_object o

@@ -3,14 +3,16 @@
     uv run generator/generate.py          reset the raw tables, load everything except the late event
     uv run generator/generate.py --late   additionally load the event that only ends after the Thursday run
 
-All times are UTC. Mon 2026-10-19 .. Thu 2026-10-22.
+All times are UTC. Mon 2026-10-12 .. Thu 2026-10-22.
 """
 import sys
 from datetime import date, datetime, timedelta, timezone
 
 import trino
 
-DAYS = [date(2026, 10, d) for d in range(19, 23)]
+DAYS = [date(2026, 10, d) for d in range(12, 23)]
+MISSING_TEAM_SNAPSHOT = {14}  # the team export failed on this day
+MISSING_OBJECT_SNAPSHOT = {15}  # the table directory export failed on this day
 
 
 def at(day, hour, minute=0):
@@ -22,6 +24,7 @@ IDE = ("iceberg", "analytics", "ide_events")
 PLUGINS = ("iceberg", "analytics", "plugins")
 IDE_VIEW = ("iceberg", "analytics", "ide_events_v")  # view on ide_events
 SUMMARY = ("iceberg", "analytics", "daily_summary")  # written, never read
+SCRATCH = ("iceberg", "analytics", "scratch_dedup")  # read and written by the same query
 UNUSED = ("iceberg", "analytics", "old_unused")  # never touched
 NEW = ("iceberg", "analytics", "new_feature_events")  # appears on Thu, never queried
 TMP = ("iceberg", "staging", "tmp_export")  # dropped on Wed
@@ -33,27 +36,36 @@ RUNTIME = ("system", "runtime", "queries")  # metadata noise, must be filtered
 # (object, type, first day in the snapshot, last day in the snapshot)
 # FLASH and CRM are in no snapshot: the directory only covers the iceberg catalog and runs once a day.
 OBJECTS = [
-    (IDE, "BASE TABLE", 19, 22),
-    (PLUGINS, "BASE TABLE", 19, 22),
-    (IDE_VIEW, "VIEW", 19, 22),
-    (SUMMARY, "BASE TABLE", 19, 22),
-    (UNUSED, "BASE TABLE", 19, 22),
-    (TMP, "BASE TABLE", 19, 20),
+    (IDE, "BASE TABLE", 12, 22),
+    (PLUGINS, "BASE TABLE", 12, 22),
+    (IDE_VIEW, "VIEW", 12, 22),
+    (SUMMARY, "BASE TABLE", 12, 22),
+    (SCRATCH, "BASE TABLE", 12, 22),
+    (UNUSED, "BASE TABLE", 12, 22),
+    (TMP, "BASE TABLE", 12, 20),
     (NEW, "BASE TABLE", 22, 22),
 ]
 
 # ---------------------------------------------------------------- users and teams
 TEAM_NAMES = {"T1": "Analytics", "T2": "Platform", "T3": "BI"}
+RENAMES = {"T1": (20, "Product Analytics")}  # team_id -> (first day with the new name, new name)
 
-# login -> (account_type, [(first day in this team, team_id, changed_at)])
-# A user is missing from the snapshot before the first entry.
+
+def team_name(team_id, day):
+    renamed_on, new_name = RENAMES.get(team_id, (None, None))
+    return new_name if renamed_on and day.day >= renamed_on else TEAM_NAMES[team_id]
+
+
+# login -> (account_type, [(first day in this team, team_id, changed_at)], last day in the snapshot or None)
+# A user is missing from the snapshot before the first entry and after the last day.
 USERS = {
-    "anna.schmidt": ("human", [(19, "T1", None), (21, "T2", at(21, 8))]),  # changes team on Wed
-    "ben.meyer": ("human", [(19, "T1", None)]),
-    "carl.weber": ("human", [(19, "T2", None)]),
-    "dana.neu": ("human", [(22, "T1", None)]),  # new hire, first snapshot on Thu
-    "tableau_service": ("service", [(19, "T3", None)]),
-    "airflow_etl": ("service", [(19, "T2", None)]),
+    "anna.schmidt": ("human", [(12, "T1", None), (21, "T2", at(21, 8))], None),  # changes team on Wed
+    "ben.meyer": ("human", [(12, "T1", None)], None),
+    "carl.weber": ("human", [(12, "T2", None)], None),
+    "dana.neu": ("human", [(22, "T1", None)], None),  # new hire, first snapshot on Thu
+    "erik.gone": ("human", [(12, "T2", None)], 15),  # leaves the snapshot after Thu 15
+    "tableau_service": ("service", [(12, "T3", None)], None),
+    "airflow_etl": ("service", [(12, "T2", None)], None),
     # bob.unknown queries but is deliberately in no snapshot
 }
 
@@ -77,6 +89,22 @@ def ev(user, source, start, secs, reads=(), *, via=None, writes=None, error=None
 
 
 EVENTS = [
+    # ---- Mon 12 (previous week, gives the trend queries a second week)
+    ev("anna.schmidt", "datagrip", at(12, 10, 0), 6, [(IDE, ["ide", "feature"], 1_500_000_000)], cpu_s=30),
+    ev("ben.meyer", "trino-cli", at(12, 11, 0), 3, [(PLUGINS, ["plugin_id"], 40_000_000)], cpu_s=8),
+    # ---- Tue 13
+    ev("airflow_etl", "airflow", at(13, 2, 0), 50, [(IDE, ["ide", "event_date"], 5_000_000_000)],
+       writes=(SUMMARY, 900_000), cpu_s=350, mem_gb=3),
+    ev("tableau_service", "tableau", at(13, 12, 0), 3, [(IDE, ["ide"], 400_000_000)], via=IDE_VIEW, cpu_s=15),
+    # ---- Wed 14: no team snapshot on this day
+    ev("carl.weber", "trino-cli", at(14, 9, 0), 4, [(IDE, ["ide"], 1_000_000_000)], cpu_s=20),
+    ev("ben.meyer", "trino-cli", at(14, 10, 0), 2, [(TMP, ["id"], 10_000_000)], cpu_s=3),
+    # ---- Thu 15: no table directory snapshot on this day
+    ev("anna.schmidt", "datagrip", at(15, 10, 0), 5, [(PLUGINS, ["plugin_id", "plugin_name"], 60_000_000)], cpu_s=12),
+    ev("erik.gone", "trino-cli", at(15, 14, 0), 3, [(PLUGINS, ["plugin_id"], 30_000_000)], cpu_s=7),  # last day before leaving
+    # ---- Fri 16
+    ev("ben.meyer", "trino-cli", at(16, 15, 0), 10, [(SCRATCH, ["id", "ts"], 200_000_000)],
+       writes=(SCRATCH, 150_000_000), cpu_s=60),  # reads and writes the same table
     # ---- Mon 19
     ev("anna.schmidt", "datagrip", at(19, 9, 0), 1, [(INFO, ["table_name"], 0)], cpu_s=0.1),  # noise
     ev("anna.schmidt", "datagrip", at(19, 10, 15), 14,
@@ -182,17 +210,21 @@ QUERY_COLS = (
 
 def team_rows():
     for day in DAYS:
-        for login, (account_type, segments) in USERS.items():
+        if day.day in MISSING_TEAM_SNAPSHOT:
+            continue
+        for login, (account_type, segments, last_day) in USERS.items():
             current = [seg for seg in segments if seg[0] <= day.day]
-            if not current:
+            if not current or (last_day and day.day > last_day):
                 continue
             first_day, team_id, changed_at = current[-1]
-            yield (f"(DATE '{day}', {s(login)}, {s(team_id)}, {s(TEAM_NAMES[team_id])}, {s(account_type)}, "
+            yield (f"(DATE '{day}', {s(login)}, {s(team_id)}, {s(team_name(team_id, day))}, {s(account_type)}, "
                    f"{ts(changed_at if first_day == day.day else None)})")
 
 
 def object_rows():
     for day in DAYS:
+        if day.day in MISSING_OBJECT_SNAPSHOT:
+            continue
         for o, table_type, first, last in OBJECTS:
             if first <= day.day <= last:
                 yield f"(DATE '{day}', {obj(o)}, {s(table_type)})"

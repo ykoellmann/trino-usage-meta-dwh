@@ -4,7 +4,7 @@
 -- Reads only. A view and the table behind it both count as used. Service accounts are users like any other,
 -- human_users shows the number without them.
 WITH p AS (
-    SELECT DATE '2026-10-19' AS from_day, DATE '2026-10-22' AS to_day, CAST('ide_events' AS varchar) AS table_name
+    SELECT DATE '2026-10-12' AS from_day, DATE '2026-10-22' AS to_day, CAST('ide_events' AS varchar) AS table_name
 )
 SELECT
     o.table_schema,
