@@ -1,5 +1,6 @@
-"""Runs the DDL and then the transformations for every day of a date range, oldest day first.
+"""Creates the schemas and tables, or runs the transformations for every day of a date range, oldest day first.
 
+    uv run run.py --init                   create schemas and tables (idempotent)
     uv run run.py                          the last two days (daily run with lookback)
     uv run run.py 2026-10-19 2026-10-22    backfill: the same job over a longer range, both days inclusive
 
@@ -24,21 +25,24 @@ def statements(path, day=None):
 
 
 def main():
-    if len(sys.argv) == 3:
-        first, last = (date.fromisoformat(a) for a in sys.argv[1:])
-    else:
-        last = datetime.now(timezone.utc).date() - timedelta(days=1)
-        first = last - timedelta(days=1)
-
     cur = trino.dbapi.connect(host="localhost", port=8080, user="run", catalog="iceberg").cursor()
 
     def run(sql):
         cur.execute(sql)
         cur.fetchall()
 
-    for ddl in sorted((SQL / "ddl").glob("*.sql")):
-        for stmt in statements(ddl):
-            run(stmt)
+    if sys.argv[1:] == ["--init"]:
+        for ddl in sorted((SQL / "ddl").glob("*.sql")):
+            for stmt in statements(ddl):
+                run(stmt)
+        print("schemas and tables created")
+        return
+
+    if len(sys.argv) == 3:
+        first, last = (date.fromisoformat(a) for a in sys.argv[1:])
+    else:
+        last = datetime.now(timezone.utc).date() - timedelta(days=1)
+        first = last - timedelta(days=1)
 
     day = first
     while day <= last:
