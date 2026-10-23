@@ -1,0 +1,53 @@
+# Local stand-in for the production stack: S3 -> object-store, Glue/etc. -> iceberg-rest, Trino cluster -> trino.
+# Credentials are throwaway values for a local test setup only.
+services:
+  object-store:
+    image: rustfs/rustfs:1.0.0
+    environment:
+      RUSTFS_ACCESS_KEY: admin
+      RUSTFS_SECRET_KEY: password
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # web console
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9000/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # One-shot job: creates the bucket the Iceberg warehouse lives in, then exits.
+  create-bucket:
+    image: rustfs/rustfs:1.0.0
+    depends_on:
+      object-store:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      curl --silent --fail --head --aws-sigv4 'aws:amz:us-east-1:s3' --user 'admin:password' http://object-store:9000/warehouse ||
+      curl --silent --fail -X PUT --aws-sigv4 'aws:amz:us-east-1:s3' --user 'admin:password' http://object-store:9000/warehouse
+      "
+
+  iceberg-rest:
+    image: apache/iceberg-rest-fixture:1.10.1
+    depends_on:
+      create-bucket:
+        condition: service_completed_successfully
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: password
+      AWS_REGION: us-east-1
+      CATALOG_WAREHOUSE: s3://warehouse/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://object-store:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+    ports:
+      - "8181:8181"
+
+  trino:
+    image: trinodb/trino:484
+    depends_on:
+      - iceberg-rest
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+    ports:
+      - "8080:8080"
