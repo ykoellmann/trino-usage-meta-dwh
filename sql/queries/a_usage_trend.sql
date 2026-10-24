@@ -1,6 +1,5 @@
 -- Question A over time: distinct users per table and week.
 -- Distinct counts cannot be summed from days to weeks, so the user stays in the aggregate and is counted again here.
-
 SELECT
     date_trunc('week', a.query_date) AS week,
     o.table_schema,

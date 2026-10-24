@@ -80,13 +80,13 @@ erDiagram
 
 On the sample data (Oct 12 to Oct 22, [`sql/queries/`](sql/queries)), after the late event from the last step above has arrived. Before it, A shows 18 queries and Product Analytics shows 14 queries and 1.606 CPU hours.
 
-**A**: `a_distinct_users_per_table.sql`, table `ide_events`:
+**A**: `a_distinct_users_per_table.sql`, table `ide_events` (selected columns):
 
 | distinct_users | human_users | queries |
 |---|---|---|
 | 7 | 4 | 19 |
 
-**B**: `b_resources_per_team.sql`:
+**B**: `b_resources_per_team.sql` (selected columns):
 
 | team_name | queries | cpu_hours | memory_gb_hours | data_read_gb | largest_query_peak_memory_gb |
 |---|---|---|---|---|---|
@@ -95,7 +95,7 @@ On the sample data (Oct 12 to Oct 22, [`sql/queries/`](sql/queries)), after the 
 | BI | 4 | 0.021 | 0.003 | 1.9 | 1.0 |
 | Unknown | 3 | 0.011 | 0.003 | 0.89 | 1.0 |
 
-The other queries: usage and resource trends per week, unused tables, tables that are written but never read, and how often each column is read.
+The other queries: usage and resource trends per week (`a_usage_trend.sql`, `b_resources_trend.sql`), and further questions in `s2_*.sql`: unused tables, tables that are written but never read, and how often each column is read.
 
 ## Design decisions
 
@@ -145,7 +145,7 @@ The query events do not contain teams, and they never show a table nobody querie
 
 | Export | Columns | Used for |
 |---|---|---|
-| user → team (for example from LDAP or the HR system) | `snapshot_date`, `user_login`, `team_id`, `team_name`, `account_type` (`human` or `service`), optional `changed_at` | team history, `dim_user`, separating service accounts |
+| user → team (for example from LDAP or the HR system) | `snapshot_date`, `user_login`, `team_id`, `team_name`, `account_type` (`human` or `service`), optional `changed_at` (not used yet, versions start on the snapshot day) | team history, `dim_user`, separating service accounts |
 | table directory (`information_schema.tables` over Trino) | `snapshot_date`, `table_catalog`, `table_schema`, `table_name`, `table_type` | unused tables, `first_seen` and `deleted_at` |
 
 The DWH builds the history itself by comparing snapshots. A change shows up when it is noticed, so it can be a day late.

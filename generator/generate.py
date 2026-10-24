@@ -138,7 +138,7 @@ EVENTS = [
     ev("tableau_service", "tableau", at(22, 8, 0), 1, [(RUNTIME, ["query_id"], 0)], cpu_s=0.1),  # noise
     ev("anna.schmidt", "datagrip", at(22, 10, 0), 9,
        [(IDE, ["ide"], 3_000_000_000), (PLUGINS, ["plugin_id"], 70_000_000)], cpu_s=120),
-    ev("dana.neu", "datagrip", at(22, 11, 0), 4, [(IDE, ["ide"], 1_000_000_000)], cpu_s=25),  # now known: Analytics
+    ev("dana.neu", "datagrip", at(22, 11, 0), 4, [(IDE, ["ide"], 1_000_000_000)], cpu_s=25),  # now known: team T1 (Product Analytics)
     ev("bob.unknown", "trino-cli", at(22, 12, 0), 4, [(IDE, ["ide"], 800_000_000)], cpu_s=18),
     ev("ben.meyer", "trino-cli", at(22, 13, 0), 1, [], cpu_s=0.2),  # SELECT 1: no table, still a resource
 ]

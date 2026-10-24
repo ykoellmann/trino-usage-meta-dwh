@@ -1,5 +1,5 @@
 -- Versions are half-open: valid_from <= day < valid_to. The open version has valid_to = 9999-12-31.
--- team_id/team_name are one SCD 2 attribute group, account_type and team_name are overwritten (type 1).
+-- SCD 2 on team_id. team_name and account_type are type 1, overwritten on all versions.
 CREATE TABLE IF NOT EXISTS iceberg.core.dim_user
 (
     user_key        bigint,
