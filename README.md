@@ -33,6 +33,12 @@ uv run generator/generate.py --late           # the long query that ends on Thu 
 uv run run.py 2026-10-21 2026-10-22           # the daily run: yesterday and the day before
 ```
 
+Check everything end to end (expected results, the late event, idempotency; recreates core and mart):
+
+```bash
+uv run tests/check.py
+```
+
 Start over with `docker compose down -v`.
 
 ## Model
