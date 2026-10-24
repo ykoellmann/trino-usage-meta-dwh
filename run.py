@@ -4,7 +4,7 @@
     uv run run.py                          the last two days (daily run with lookback)
     uv run run.py 2026-10-19 2026-10-22    backfill: the same job over a longer range, both days inclusive
 
-In production an orchestrator such as Airflow would do this.
+In production an orchestrator would do this.
 """
 import sys
 from datetime import date, datetime, timedelta, timezone

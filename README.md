@@ -138,7 +138,6 @@ raw.object_snapshot ► dim_object ─┴─► fact_object_access ──► agg
 - **Dimensions:** `MERGE`. They carry state over time, so they cannot be replaced per day.
 - **Lookback:** every daily run recomputes yesterday and the day before. A query belongs to the day of its `createTime`, but its event only exists once the query ends, so long queries over midnight or a delayed event pipeline would otherwise be missing from their day for good.
 - **Backfill:** the same job over a date range, `uv run run.py <from> <to>`. Possible as far back as the raw data is kept.
-- **In production** an orchestrator such as Airflow would run the same steps in the same order, with retries, schedule and alerting. `run.py` stands in for it here.
 
 ## Additional metadata
 
@@ -192,4 +191,4 @@ The DWH builds the history itself by comparing snapshots. A change shows up when
 
 ## Use of AI tools
 
-I used Claude as a sparring partner and coding assistant throughout this task. It explained the parts of the stack I had not worked with before (Iceberg, Trino's event listener, dimensional modelling) and laid out options with their trade-offs; the design decisions documented above are mine. I wrote the raw-layer DDL myself. The Docker setup, the data generator, the core and mart transformations, the run script and the example queries were implemented with Claude Code from my design. The results were checked against expected values calculated independently of the SQL, and idempotency was tested by re-running the pipeline.
+I used Claude as a sparring partner and coding assistant throughout this task. It explained the parts of the stack I had not worked with before (Iceberg, Trino's event listener, dimensional modelling) and laid out options with their trade-offs; the design decisions documented above are mine. I wrote the raw-layer DDL, parts of the core and mart transformations, and parts of the example queries myself, then used AI to review, fix and clean them up. The Docker setup, the data generator, the run and test scripts and the remaining transformations were implemented with Claude Code from my design; I reviewed every file, verified the results against hand-calculated expected values, and tested idempotency by re-running the pipeline.
