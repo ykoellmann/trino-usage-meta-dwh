@@ -12,7 +12,7 @@ The raw input is Trino's `queryCompleted` events. Everything runs locally in Doc
 You need Docker and [uv](https://docs.astral.sh/uv/). Trino needs a few GB of memory.
 
 ```bash
-docker compose up -d                          # Trino, Iceberg REST catalog, RustFS as local S3 stand-in (give Trino ~20 s)
+docker compose up -d --wait                   # Trino, Iceberg REST catalog, RustFS as local S3 stand-in; returns once Trino is ready
 uv run run.py --init                          # create schemas and tables (idempotent)
 uv run generator/generate.py                  # simulate the event listener and the two metadata exports
 uv run run.py 2026-10-12 2026-10-22           # load all days, this is also the backfill

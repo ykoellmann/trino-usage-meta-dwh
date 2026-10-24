@@ -2,6 +2,7 @@
 # Credentials are throwaway values for a local test setup only.
 services:
   object-store:
+    container_name: meta-dwh-object-store
     image: rustfs/rustfs:1.0.0
     environment:
       RUSTFS_ACCESS_KEY: admin
@@ -17,6 +18,7 @@ services:
 
   # One-shot job: creates the bucket the Iceberg warehouse lives in, then exits.
   create-bucket:
+    container_name: meta-dwh-create-bucket
     image: rustfs/rustfs:1.0.0
     depends_on:
       object-store:
@@ -28,6 +30,7 @@ services:
       "
 
   iceberg-rest:
+    container_name: meta-dwh-iceberg-rest
     image: apache/iceberg-rest-fixture:1.10.1
     depends_on:
       create-bucket:
@@ -44,6 +47,7 @@ services:
       - "8181:8181"
 
   trino:
+    container_name: meta-dwh-trino
     image: trinodb/trino:484
     depends_on:
       - iceberg-rest
