@@ -51,7 +51,7 @@ USING (
     FROM iceberg.raw.team_snapshot
     WHERE snapshot_date = DATE '${day}'
       AND snapshot_date = (SELECT max(snapshot_date) FROM iceberg.raw.team_snapshot)
-    GROUP BY team_id
+    GROUP BY 1
 ) AS s
 ON t.team_id = s.team_id
 WHEN MATCHED AND t.team_name <> s.team_name THEN
@@ -64,7 +64,7 @@ USING (
     FROM iceberg.raw.team_snapshot
     WHERE snapshot_date = DATE '${day}'
       AND snapshot_date = (SELECT max(snapshot_date) FROM iceberg.raw.team_snapshot)
-    GROUP BY user_login
+    GROUP BY 1
 ) AS s
 ON t.user_login = s.user_login
 WHEN MATCHED AND t.account_type <> s.account_type THEN

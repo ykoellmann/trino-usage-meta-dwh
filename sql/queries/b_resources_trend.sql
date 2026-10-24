@@ -10,4 +10,4 @@ SELECT
 FROM iceberg.mart.agg_user_resources_daily a
 JOIN iceberg.core.dim_user u ON u.user_key = a.user_key
 GROUP BY 1, 2
-ORDER BY u.team_name, week
+ORDER BY 2, 1

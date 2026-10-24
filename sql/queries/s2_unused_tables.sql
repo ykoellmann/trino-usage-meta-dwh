@@ -17,4 +17,4 @@ WHERE o.table_catalog = 'iceberg'
       WHERE a.object_key = o.object_key
         AND a.query_date BETWEEN p.from_day AND p.to_day
   )
-ORDER BY o.table_schema, o.table_name
+ORDER BY 1, 2

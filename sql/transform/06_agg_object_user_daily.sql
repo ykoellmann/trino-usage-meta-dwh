@@ -13,4 +13,4 @@ SELECT
     sum(written_bytes)
 FROM iceberg.core.fact_object_access
 WHERE query_date = DATE '${day}'
-GROUP BY query_date, object_key, user_key, access_type, is_direct
+GROUP BY 1, 2, 3, 4, 5

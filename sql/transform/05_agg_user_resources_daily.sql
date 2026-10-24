@@ -13,4 +13,4 @@ SELECT
     max(peak_user_memory_bytes)
 FROM iceberg.core.fact_query
 WHERE query_date = DATE '${day}'
-GROUP BY query_date, user_key
+GROUP BY 1, 2

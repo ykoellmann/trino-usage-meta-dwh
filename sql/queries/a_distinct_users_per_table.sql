@@ -20,5 +20,5 @@ WHERE a.access_type = 'READ'
   AND a.query_date BETWEEN p.from_day AND p.to_day
   AND o.table_catalog = 'iceberg'
   AND (p.table_name IS NULL OR o.table_name = p.table_name)
-GROUP BY o.table_schema, o.table_name
-ORDER BY distinct_users DESC, o.table_name
+GROUP BY 1, 2
+ORDER BY 3 DESC, 2

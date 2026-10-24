@@ -19,5 +19,5 @@ FROM iceberg.mart.agg_user_resources_daily a
 JOIN iceberg.core.dim_user u ON u.user_key = a.user_key
 CROSS JOIN p
 WHERE a.query_date BETWEEN p.from_day AND p.to_day
-GROUP BY u.team_id, u.team_name
-ORDER BY cpu_hours DESC
+GROUP BY 1, 2
+ORDER BY 4 DESC

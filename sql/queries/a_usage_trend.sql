@@ -13,4 +13,4 @@ JOIN iceberg.core.dim_object o ON o.object_key = a.object_key
 WHERE a.access_type = 'READ'
   AND o.table_catalog = 'iceberg'
 GROUP BY 1, 2, 3
-ORDER BY o.table_name, week
+ORDER BY 3, 1

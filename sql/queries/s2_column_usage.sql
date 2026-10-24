@@ -18,5 +18,5 @@ CROSS JOIN p
 WHERE f.access_type = 'READ'
   AND f.query_date BETWEEN p.from_day AND p.to_day
   AND o.table_catalog = 'iceberg'
-GROUP BY o.table_schema, o.table_name, c.column_name
-ORDER BY o.table_name, reads DESC, c.column_name
+GROUP BY 1, 2, 3
+ORDER BY 2, 4 DESC, 3

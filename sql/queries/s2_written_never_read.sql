@@ -20,5 +20,5 @@ WHERE a.access_type = 'WRITE'
         AND r.access_type = 'READ'
         AND r.query_date BETWEEN p.from_day AND p.to_day
   )
-GROUP BY o.table_schema, o.table_name
-ORDER BY written_bytes DESC
+GROUP BY 1, 2
+ORDER BY 4 DESC
